@@ -1,0 +1,12 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Andy Ward (andy.ward.uk@gmail.com"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = ["solve", "dictionary", "solver", "numformat"]
+
+[profile.release]
+lto = true
