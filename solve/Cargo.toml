@@ -1,6 +1,6 @@
 [package]
 name = "solve"
-description = "Solve a countdown letters game"
+description = "Solve a wordle game"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -8,11 +8,9 @@ authors.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+crossterm = "0.26.1"
+tui = "0.19.0"
 clap = { version = "4.0.29", features = ["derive"] }
 
 dictionary = { path = "../dictionary" }
 solver = { path = "../solver" }
-numformat = { path = "../numformat" }
-
-[target.'cfg(any(unix, windows))'.dependencies]
-terminal_size = "0.2.1"

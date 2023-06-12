@@ -1,36 +1,28 @@
-#![warn(missing_docs)]
-
-//! Countdown letters game solver
-
-mod results;
-
+use std::error::Error;
 use std::io;
 use std::path::Path;
-use std::time::Instant;
 
 use clap::Parser;
+use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::execute;
+use crossterm::terminal::{
+    disable_raw_mode,
+    enable_raw_mode,
+    EnterAlternateScreen,
+    LeaveAlternateScreen,
+};
 use dictionary::{Dictionary, WordSizeConstraint};
-use numformat::NumFormat;
-use solver::{find_words, SolverArgs};
+use tui::backend::CrosstermBackend;
+use tui::Terminal;
 
-use crate::results::print_results;
+mod app;
 
-/// Countdown letters game solver
+use app::App;
+
+/// Wordle solver
 #[derive(Parser, Default)]
 #[clap(author, version, about)]
 struct Args {
-    /// Current board
-    #[clap(value_parser = validate_board)]
-    board: String,
-
-    /// Letters not in the solution
-    #[clap(value_parser = validate_letters)]
-    unused: String,
-
-    /// Letters in the solution
-    #[clap(value_parser = validate_letters)]
-    unplaced: Option<String>,
-
     /// Word list file
     #[clap(
         short = 'd',
@@ -48,7 +40,7 @@ struct Args {
     debug: bool,
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
     // Parse command line arguments
     let args = Args::parse();
 
@@ -72,63 +64,31 @@ fn main() -> io::Result<()> {
 
     let dictionary = Dictionary::new_from_file(&args.dictionary_file, size, args.verbose)?;
 
-    // Find words
-    let start_time = Instant::now();
+    // setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
-    let words = find_words(SolverArgs {
-        board: &args.board,
-        unplaced: &args.unplaced,
-        unused: &args.unused,
-        dictionary: &dictionary,
-        debug: args.debug,
-    });
+    // create app and run it
+    let mut app = App::new(dictionary);
+    let res = app.run(&mut terminal);
 
-    if args.verbose {
-        println!(
-            "Search took {} seconds",
-            start_time.elapsed().as_secs_f64().num_format_sigdig(2)
-        );
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{:?}", err)
     }
-
-    // Print results
-    print_results(words);
 
     Ok(())
-}
-
-fn validate_board(s: &str) -> Result<String, String> {
-    // Check minimum length
-    if s.len() != 5 {
-        Err("Board should contain 5 characters")?;
-    }
-
-    // Convert all letters to upper case
-    let ustring = s
-        .chars()
-        .map(|c| c.to_ascii_uppercase())
-        .collect::<String>();
-
-    // Check we only have upper case ascii characters or '.'
-    if !ustring.chars().all(|c| c.is_ascii_uppercase() || c == '.') {
-        Err("Board letters must be A-Z or . only".to_string())?;
-    }
-
-    Ok(ustring)
-}
-
-fn validate_letters(s: &str) -> Result<String, String> {
-    // Convert all letters to upper case
-    let ustring = s
-        .chars()
-        .map(|c| c.to_ascii_uppercase())
-        .collect::<String>();
-
-    // Check we only have upper case ascii characters
-    if !ustring.chars().all(|c| c.is_ascii_uppercase()) {
-        Err("Letters must be A-Z only".to_string())?;
-    }
-
-    Ok(ustring)
 }
 
 const DICTS: [&str; 3] = [

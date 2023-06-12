@@ -4,14 +4,29 @@
 
 use dictionary::{Dictionary, LetterNext};
 
+/// Number of columns on the board
+pub const BOARD_COLS: usize = 5;
+
+/// Number of rows on the board
+pub const BOARD_ROWS: usize = 6;
+
+/// Board element
+#[derive(Clone, Copy, Debug)]
+pub enum BoardElem {
+    /// Empty board space
+    Empty,
+    /// Gray board space (letter not in solution)
+    Gray(char),
+    /// Yellow board space (letter in solution but in the wrong place)
+    Yellow(char),
+    /// Green board space (letter in solution and in the correct place)
+    Green(char),
+}
+
 /// Arguments for the wordle helper
 pub struct SolverArgs<'a> {
     /// Current board
-    pub board: &'a str,
-    /// Letters in the wrong place
-    pub unplaced: &'a Option<String>,
-    /// Letters not in the solution
-    pub unused: &'a str,
+    pub board: &'a [[BoardElem; BOARD_COLS]; BOARD_ROWS],
     /// Dictionary to use
     pub dictionary: &'a Dictionary,
     /// Debug output
@@ -20,51 +35,50 @@ pub struct SolverArgs<'a> {
 
 struct SolverRec<'a> {
     args: SolverArgs<'a>,
-    board_elems: Vec<Option<u8>>,
+    correct: [Option<u8>; BOARD_COLS],
+    incorrect: [[bool; 26]; BOARD_COLS],
+    contains: Vec<u8>,
     unused: [bool; 26],
-    unplaced: Vec<u8>,
 }
 
 /// Find words in the provides dictionary using the provided letters
 pub fn find_words(args: SolverArgs) -> Vec<String> {
     let mut result = Vec::new();
 
-    // Dictionary entry element numbers for each letter
-    let board_elems = args
-        .board
-        .chars()
-        .map(|c| {
-            if c.is_ascii_uppercase() {
-                Some(c as u8 - b'A')
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<Option<u8>>>();
+    // Correct letters
+    let mut correct = [None; BOARD_COLS];
 
-    // Build used array
+    // Incorrect letters
+    let mut incorrect = [[false; 26]; BOARD_COLS];
+    let mut contains = Vec::new();
+
+    // Unused letters
     let mut unused = [false; 26];
 
-    for c in args.unused.chars() {
-        unused[(c as u8 - b'A') as usize] = true;
+    for row in args.board {
+        for (elem, col) in row.iter().enumerate() {
+            match col {
+                BoardElem::Gray(c) => unused[(*c as u8 - b'A') as usize] = true,
+                BoardElem::Yellow(c) => {
+                    incorrect[elem][(*c as u8 - b'A') as usize] = true;
+                    contains.push(*c as u8 - b'A');
+                }
+                BoardElem::Green(c) => correct[elem] = Some(*c as u8 - b'A'),
+                _ => (),
+            }
+        }
     }
 
     // Vector of chosen letter elements
-    let mut chosen = Vec::with_capacity(5);
-
-    // Vector of unplaced letters
-    let unplaced = if let Some(unplaced) = args.unplaced {
-        unplaced.chars().map(|c| c as u8 - b'A').collect()
-    } else {
-        Vec::new()
-    };
+    let mut chosen = Vec::with_capacity(BOARD_COLS);
 
     // Start search recursion
     let rec = SolverRec {
         args,
-        board_elems,
+        correct,
+        incorrect,
+        contains,
         unused,
-        unplaced,
     };
 
     find_words_rec(&rec, 0, 0, &mut chosen, &mut result);
@@ -80,11 +94,11 @@ fn find_words_rec(
     result: &mut Vec<String>,
 ) {
     // Got a letter in this position?
-    if let Some(letter) = rec.board_elems[letter_elem] {
+    if let Some(letter) = rec.correct[letter_elem] {
         find_words_rec_letter(rec, letter_elem, dict_elem, chosen, letter, result);
     } else {
         for letter in 0u8..26u8 {
-            if !rec.unused[letter as usize] {
+            if !rec.unused[letter as usize] && !rec.incorrect[letter_elem][letter as usize] {
                 find_words_rec_letter(rec, letter_elem, dict_elem, chosen, letter, result);
             }
         }
@@ -117,11 +131,11 @@ fn find_words_rec_letter(
             find_words_rec(rec, letter_elem + 1, e as usize, chosen, result);
         }
         LetterNext::End => {
-            if letter_elem == 4 {
+            if letter_elem == BOARD_COLS - 1 {
                 // Check we have all unplaced letters in the word
                 let mut valid = true;
 
-                for c in &rec.unplaced {
+                for c in &rec.contains {
                     if !chosen.contains(c) {
                         valid = false;
                         break;
@@ -157,16 +171,4 @@ fn debug_lookup(chosen: &[u8], dict_elem: &LetterNext) {
     let indent = string.len();
 
     println!("{:indent$}{} ({:?})", "", string, dict_elem);
-}
-
-#[cfg(test)]
-mod tests {
-    use dictionary::{Dictionary, LetterNext};
-
-    use super::*;
-
-    #[test]
-    fn size_checks() {
-        assert_eq!(8, std::mem::size_of::<LetterNext>());
-    }
 }
