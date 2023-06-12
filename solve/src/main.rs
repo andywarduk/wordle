@@ -34,10 +34,6 @@ struct Args {
     /// Verbose output
     #[clap(short = 'v', long = "verbose")]
     verbose: bool,
-
-    /// Debug output
-    #[clap(long = "debug")]
-    debug: bool,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

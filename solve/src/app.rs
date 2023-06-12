@@ -6,7 +6,7 @@ use solver::{find_words, BoardElem, SolverArgs, BOARD_COLS, BOARD_ROWS};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
-use tui::text::Text;
+use tui::text::{Spans, Text};
 use tui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
 use tui::{Frame, Terminal};
 
@@ -281,37 +281,35 @@ Press Escape to exit"#;
             let rows = rect.height as usize - 2;
             let cols = (rect.width as usize - 1) / (BOARD_COLS + 1);
 
-            // TODO convert to simple paragraph
-            let mut content = Vec::with_capacity(rows);
+            // Create text content
+            let mut content = Text::default();
 
             for row in 0..rows {
-                let mut cells = Vec::with_capacity(cols);
+                let mut line = String::new();
 
                 for col in 0..cols {
                     let elem = (col * rows) + row;
 
                     if elem < words.len() {
-                        cells.push(Cell::from(words[elem].clone()))
+                        if col > 0 {
+                            line.push(' ');
+                        }
+                        line.push_str(&words[elem]);
                     } else {
-                        cells.push(Cell::default())
+                        break;
                     }
                 }
 
-                content.push(Row::new(cells));
+                content.lines.push(Spans::from(line));
             }
 
-            let widths = vec![Constraint::Length(BOARD_COLS as u16); cols];
+            let para = Paragraph::new(content).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(format!("Words ({} found)", words.len())),
+            );
 
-            let table = Table::new(content)
-                .widths(&widths)
-                .column_spacing(Self::CELL_SPACING)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title(format!("Words ({} found)", words.len())),
-                );
-
-            f.render_widget(table, rect);
+            f.render_widget(para, rect);
         }
     }
 
