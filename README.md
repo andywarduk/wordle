@@ -23,3 +23,7 @@ Type letters to fill the board. Toggle letter state by clicking with the mouse o
 ## Demo
 
 ![Demonstration](doc/Demo.gif)
+
+## Included word list
+
+The included words.txt file comes from [https://github.com/dwyl/english-words] which originally came from [https://www.infochimps.com/datasets/word-list-350000-simple-english-words-excel-readable].
