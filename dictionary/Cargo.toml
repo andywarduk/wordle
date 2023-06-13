@@ -8,5 +8,3 @@ authors.workspace = true
 
 [dependencies]
 flate2 = "1.0.25"
-
-numformat = { path = "../numformat" }

@@ -1,7 +1,7 @@
 use std::io;
 
 use crossterm::event::{self, Event, KeyCode, MouseEventKind};
-use dictionary::Dictionary;
+use dictionary::{Dictionary, LetterNext};
 use solver::{find_words, BoardElem, SolverArgs, BOARD_COLS, BOARD_ROWS};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -25,7 +25,7 @@ pub struct App {
     /// Dictionary
     dictionary: Dictionary,
     /// Words
-    words: Option<Vec<String>>,
+    words: Option<Vec<LetterNext>>,
 }
 
 impl App {
@@ -296,7 +296,7 @@ Press Escape to exit"#;
                                 if col > 0 {
                                     line.push(' ');
                                 }
-                                line.push_str(&words[elem]);
+                                line.push_str(&self.dictionary.get_word(words[elem] as usize));
                             }
 
                             line

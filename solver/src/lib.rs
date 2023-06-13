@@ -2,7 +2,7 @@
 
 //! Wordle helper
 
-use dictionary::{Dictionary, LetterNext};
+use dictionary::{Dictionary, LetterNext, NEXT_NONE};
 
 /// Number of columns on the board
 pub const BOARD_COLS: usize = 5;
@@ -42,7 +42,7 @@ struct SolverRec<'a> {
 }
 
 /// Find words in the provides dictionary using the provided letters
-pub fn find_words(args: SolverArgs) -> Vec<String> {
+pub fn find_words(args: SolverArgs) -> Vec<LetterNext> {
     let mut result = Vec::new();
 
     // Correct letters
@@ -58,19 +58,16 @@ pub fn find_words(args: SolverArgs) -> Vec<String> {
     for row in args.board {
         for (elem, col) in row.iter().enumerate() {
             match col {
-                BoardElem::Gray(c) => unused[(*c as u8 - b'A') as usize] = true,
+                BoardElem::Gray(c) => unused[Dictionary::uchar_to_usize(*c)] = true,
                 BoardElem::Yellow(c) => {
-                    incorrect[elem][(*c as u8 - b'A') as usize] = true;
-                    contains.push(*c as u8 - b'A');
+                    incorrect[elem][Dictionary::uchar_to_usize(*c)] = true;
+                    contains.push(Dictionary::uchar_to_u8(*c));
                 }
-                BoardElem::Green(c) => correct[elem] = Some(*c as u8 - b'A'),
+                BoardElem::Green(c) => correct[elem] = Some(Dictionary::uchar_to_u8(*c)),
                 _ => (),
             }
         }
     }
-
-    // Vector of chosen letter elements
-    let mut chosen = Vec::with_capacity(BOARD_COLS);
 
     // Start search recursion
     let rec = SolverRec {
@@ -81,7 +78,7 @@ pub fn find_words(args: SolverArgs) -> Vec<String> {
         unused,
     };
 
-    find_words_rec(&rec, 0, 0, &mut chosen, &mut result);
+    find_words_rec(&rec, 0, 0, &mut result);
 
     result
 }
@@ -90,16 +87,15 @@ fn find_words_rec(
     rec: &SolverRec,
     letter_elem: usize,
     dict_elem: usize,
-    chosen: &mut Vec<u8>,
-    result: &mut Vec<String>,
+    result: &mut Vec<LetterNext>,
 ) {
     // Got a letter in this position?
     if let Some(letter) = rec.correct[letter_elem] {
-        find_words_rec_letter(rec, letter_elem, dict_elem, chosen, letter, result);
+        find_words_rec_letter(rec, letter_elem, dict_elem, letter, result);
     } else {
         for letter in 0u8..26u8 {
             if !rec.unused[letter as usize] && !rec.incorrect[letter_elem][letter as usize] {
-                find_words_rec_letter(rec, letter_elem, dict_elem, chosen, letter, result);
+                find_words_rec_letter(rec, letter_elem, dict_elem, letter, result);
             }
         }
     }
@@ -109,12 +105,9 @@ fn find_words_rec_letter(
     rec: &SolverRec,
     letter_elem: usize,
     dict_elem: usize,
-    chosen: &mut Vec<u8>,
     letter: u8,
-    result: &mut Vec<String>,
+    result: &mut Vec<LetterNext>,
 ) {
-    chosen.push(letter);
-
     // Walk the dictionary
     let dict_elem = rec
         .args
@@ -122,52 +115,35 @@ fn find_words_rec_letter(
         .lookup_elem_letter_num(dict_elem, letter);
 
     if rec.args.debug {
-        debug_lookup(chosen, &dict_elem);
+        debug_lookup(rec.args.dictionary, dict_elem);
     }
 
     // Recurse to next letter
-    match dict_elem {
-        LetterNext::Next(e) | LetterNext::EndNext(e) => {
-            find_words_rec(rec, letter_elem + 1, e as usize, chosen, result);
-        }
-        LetterNext::End => {
-            if letter_elem == BOARD_COLS - 1 {
-                // Check we have all unplaced letters in the word
-                let mut valid = true;
+    if dict_elem != NEXT_NONE {
+        if letter_elem == BOARD_COLS - 1 {
+            // Check we have all unplaced letters in the word
+            let mut valid = true;
 
-                for c in &rec.contains {
-                    if !chosen.contains(c) {
-                        valid = false;
-                        break;
-                    }
-                }
-
-                if valid {
-                    // Add to results
-                    result.push(chosen_string(chosen));
+            for c in &rec.contains {
+                if !rec.args.dictionary.word_contains(dict_elem as usize, *c) {
+                    valid = false;
+                    break;
                 }
             }
+
+            if valid {
+                // Add to results
+                result.push(dict_elem);
+            }
+        } else {
+            find_words_rec(rec, letter_elem + 1, dict_elem as usize, result);
         }
-        _ => (),
     }
-
-    // SAFETY: length always decreasing and always removing the pushed entry above
-    unsafe {
-        chosen.set_len(chosen.len() - 1);
-    }
-}
-
-#[inline]
-fn chosen_string(chosen: &[u8]) -> String {
-    chosen
-        .iter()
-        .map(|e| (*e + b'A') as char)
-        .collect::<String>()
 }
 
 #[cold]
-fn debug_lookup(chosen: &[u8], dict_elem: &LetterNext) {
-    let string = chosen_string(chosen);
+fn debug_lookup(dictionary: &Dictionary, dict_elem: LetterNext) {
+    let string = dictionary.get_word(dict_elem as usize);
     let indent = string.len();
 
     println!("{:indent$}{} ({:?})", "", string, dict_elem);

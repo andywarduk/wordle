@@ -11,7 +11,7 @@ use crossterm::terminal::{
     EnterAlternateScreen,
     LeaveAlternateScreen,
 };
-use dictionary::{Dictionary, WordSizeConstraint};
+use dictionary::Dictionary;
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
@@ -53,12 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // Load words
-    let mut size = WordSizeConstraint::default();
-
-    size.set_min(5);
-    size.set_max(5);
-
-    let dictionary = Dictionary::new_from_file(&args.dictionary_file, size, args.verbose)?;
+    let dictionary = Dictionary::new_from_file(&args.dictionary_file, args.verbose)?;
 
     // setup terminal
     enable_raw_mode()?;
