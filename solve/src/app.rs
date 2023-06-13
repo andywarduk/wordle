@@ -5,8 +5,8 @@ use dictionary::Dictionary;
 use solver::{find_words, BoardElem, SolverArgs, BOARD_COLS, BOARD_ROWS};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Style};
-use tui::text::{Spans, Text};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans, Text};
 use tui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
 use tui::{Frame, Terminal};
 
@@ -51,6 +51,7 @@ impl App {
 Wordle Solver
     
 Fill the board on the left by pressing letter keys.
+
 The colour of each letter can be toggled by clicking with the mouse or with the keys 1-5.
 
 Press Escape to exit"#;
@@ -192,9 +193,12 @@ Press Escape to exit"#;
             } else {
                 // Draw the instructions in the right hand section
                 f.render_widget(
-                    Paragraph::new(Text::from(Self::INSTRUCTIONS))
-                        .wrap(Wrap { trim: false })
-                        .block(Block::default().borders(Borders::ALL).title("Instructions")),
+                    Paragraph::new(Text::styled(
+                        Self::INSTRUCTIONS,
+                        Style::default().add_modifier(Modifier::BOLD),
+                    ))
+                    .wrap(Wrap { trim: false })
+                    .block(Block::default().borders(Borders::ALL).title("Instructions")),
                     self.words_rect.unwrap(),
                 )
             };
@@ -239,7 +243,7 @@ Press Escape to exit"#;
     fn board_cell<'b>(c: char, colour: Color) -> Cell<'b> {
         Cell::from(Text::styled(
             format!("     \n  {}  \n     ", c),
-            Style::default().bg(colour),
+            Style::default().bg(colour).add_modifier(Modifier::BOLD),
         ))
     }
 
@@ -281,27 +285,29 @@ Press Escape to exit"#;
             let rows = rect.height as usize - 2;
             let cols = (rect.width as usize - 1) / (BOARD_COLS + 1);
 
+            // Create spans
+            let spans = (0..rows)
+                .map(|row| {
+                    Spans::from(Span::styled(
+                        (0..cols).fold(String::new(), |mut line, col| {
+                            let elem = (col * rows) + row;
+
+                            if elem < words.len() {
+                                if col > 0 {
+                                    line.push(' ');
+                                }
+                                line.push_str(&words[elem]);
+                            }
+
+                            line
+                        }),
+                        Style::default().add_modifier(Modifier::BOLD),
+                    ))
+                })
+                .collect::<Vec<_>>();
+
             // Create text content
-            let mut content = Text::default();
-
-            for row in 0..rows {
-                let mut line = String::new();
-
-                for col in 0..cols {
-                    let elem = (col * rows) + row;
-
-                    if elem < words.len() {
-                        if col > 0 {
-                            line.push(' ');
-                        }
-                        line.push_str(&words[elem]);
-                    } else {
-                        break;
-                    }
-                }
-
-                content.lines.push(Spans::from(line));
-            }
+            let content = Text::from(spans);
 
             let para = Paragraph::new(content).block(
                 Block::default()
