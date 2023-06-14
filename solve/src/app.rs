@@ -326,8 +326,14 @@ Press Escape to exit"#;
             return false;
         }
 
-        // Set board element to gray letter
-        self.board[self.row][self.col] = BoardElem::Gray(c);
+        // Set board element to the letter
+        // Search through board rows for matching letter in this column and copy if found
+        self.board[self.row][self.col] = self
+                .board
+                .iter()
+                .find(|row| matches!(row[self.col], BoardElem::Green(oc) | BoardElem::Yellow(oc) if oc == c))
+                .map(|row| row[self.col])
+                .unwrap_or(BoardElem::Gray(c));
 
         // Move to the next board element
         self.col += 1;
@@ -363,18 +369,41 @@ Press Escape to exit"#;
 
     /// Toggle a board cell between Gray, Yellow and Green
     fn toggle(&mut self, row: usize, col: usize) -> bool {
-        // Work out what to convert the board element to
-        let new = match self.board[row][col] {
-            BoardElem::Gray(c) => Some(BoardElem::Yellow(c)),
-            BoardElem::Yellow(c) => Some(BoardElem::Green(c)),
-            BoardElem::Green(c) => Some(BoardElem::Gray(c)),
-            _ => None,
-        };
+        // Get the character we're toggling
+        if let Some(c) = match self.board[row][col] {
+            BoardElem::Gray(c) | BoardElem::Yellow(c) | BoardElem::Green(c) => Some(c),
+            BoardElem::Empty => None,
+        } {
+            // Work out what to convert the board element to
+            let new = match self.board[row][col] {
+                BoardElem::Gray(c) => BoardElem::Yellow(c),
+                BoardElem::Yellow(c) => {
+                    if self
+                        .board
+                        .iter()
+                        .any(|row| matches!(row[col], BoardElem::Green(_)))
+                    {
+                        BoardElem::Gray(c)
+                    } else {
+                        BoardElem::Green(c)
+                    }
+                }
+                BoardElem::Green(c) => BoardElem::Gray(c),
+                BoardElem::Empty => unreachable!(),
+            };
 
-        // Got a conversion?
-        if let Some(new) = new {
             // Set new board element value
-            self.board[row][col] = new;
+            for row in &mut self.board {
+                match row[col] {
+                    BoardElem::Gray(oc) | BoardElem::Yellow(oc) | BoardElem::Green(oc)
+                        if oc == c =>
+                    {
+                        row[col] = new;
+                    }
+                    _ => (),
+                }
+            }
+
             true
         } else {
             false
