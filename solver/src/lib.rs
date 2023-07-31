@@ -2,6 +2,8 @@
 
 //! Wordle helper
 
+use std::collections::HashMap;
+
 use dictionary::{Dictionary, LetterNext, NEXT_NONE};
 
 /// Number of columns on the board
@@ -37,8 +39,13 @@ struct SolverRec<'a> {
     args: SolverArgs<'a>,
     correct: [Option<u8>; BOARD_COLS],
     incorrect: [[bool; 26]; BOARD_COLS],
-    contains: Vec<u8>,
+    contains: HashMap<u8, Contains>,
     unused: [bool; 26],
+}
+
+enum Contains {
+    AtLeast(u8),
+    Exactly(u8),
 }
 
 /// Find words in the provides dictionary using the provided letters
@@ -50,10 +57,23 @@ pub fn find_words(args: SolverArgs) -> Vec<LetterNext> {
 
     // Incorrect letters
     let mut incorrect = [[false; 26]; BOARD_COLS];
-    let mut contains = Vec::new();
+    let mut contains = HashMap::new();
 
     // Unused letters
     let mut unused = [false; 26];
+
+    // Lambda to add a letter to the contains list
+    let add_contains = |contains: &mut HashMap<u8, Contains>, c| {
+        contains
+            .entry(Dictionary::uchar_to_u8(c))
+            .and_modify(|e| {
+                *e = match *e {
+                    Contains::AtLeast(n) => Contains::AtLeast(n + 1),
+                    Contains::Exactly(_) => panic!("Attempt to update Contains::Exactly"),
+                }
+            })
+            .or_insert(Contains::AtLeast(1));
+    };
 
     for row in args.board {
         for (elem, col) in row.iter().enumerate() {
@@ -61,21 +81,34 @@ pub fn find_words(args: SolverArgs) -> Vec<LetterNext> {
                 BoardElem::Gray(c) => unused[Dictionary::uchar_to_usize(*c)] = true,
                 BoardElem::Yellow(c) => {
                     incorrect[elem][Dictionary::uchar_to_usize(*c)] = true;
-                    // TODO duplicate
-                    contains.push(Dictionary::uchar_to_u8(*c));
+                    add_contains(&mut contains, *c);
                 }
-                BoardElem::Green(c) => correct[elem] = Some(Dictionary::uchar_to_u8(*c)),
+                BoardElem::Green(c) => {
+                    correct[elem] = Some(Dictionary::uchar_to_u8(*c));
+                    add_contains(&mut contains, *c);
+                }
                 _ => (),
             }
         }
     }
 
     // Letter can be in contains and unused if guessed multiple times and the word contains fewer
-    for (i, u) in unused.iter_mut().enumerate() {
-        if *u && contains.contains(&(i as u8)) {
-            *u = false;
-        }
-    }
+    unused
+        .iter_mut()
+        .enumerate()
+        .filter(|(_, unused)| **unused)
+        .for_each(|(i, unused)| {
+            if let Some(contains) = contains.get_mut(&(i as u8)) {
+                // Set unused to false
+                *unused = false;
+
+                // Convert Contains AtLeast to Exactly
+                *contains = match *contains {
+                    Contains::AtLeast(n) => Contains::Exactly(n),
+                    Contains::Exactly(_) => panic!("Already Contains::Exactly"),
+                }
+            }
+        });
 
     // Start search recursion
     let rec = SolverRec {
@@ -132,8 +165,17 @@ fn find_words_rec_letter(
             // Check we have all unplaced letters in the word
             let mut valid = true;
 
-            for c in &rec.contains {
-                if !rec.args.dictionary.word_contains(dict_elem as usize, *c) {
+            for (c, contains) in &rec.contains {
+                let (count, exact) = match contains {
+                    Contains::AtLeast(n) => (n, false),
+                    Contains::Exactly(n) => (n, true),
+                };
+
+                if !rec
+                    .args
+                    .dictionary
+                    .word_contains(dict_elem as usize, *c, *count, exact)
+                {
                     valid = false;
                     break;
                 }

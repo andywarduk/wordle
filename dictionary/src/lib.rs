@@ -209,19 +209,22 @@ impl Dictionary {
     }
 
     /// Tests if a word contains a given letter
-    pub fn word_contains(&self, mut elem: usize, letter: u8) -> bool {
-        let mut result: bool = false;
+    pub fn word_contains(&self, mut elem: usize, letter: u8, count: u8, exact: bool) -> bool {
+        let mut counted = 0;
 
         while elem != 0 {
             if self.tree[elem].letter == letter {
-                result = true;
-                break;
+                counted += 1;
             }
 
             elem = self.tree[elem].parent as usize;
         }
 
-        result
+        if exact {
+            counted == count
+        } else {
+            counted >= count
+        }
     }
 
     /// Converts a lower case character to usize
