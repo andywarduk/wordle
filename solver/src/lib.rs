@@ -2,6 +2,7 @@
 
 //! Wordle helper
 
+use std::cmp;
 use std::collections::HashMap;
 
 use dictionary::{Dictionary, LetterNext, NEXT_NONE};
@@ -62,33 +63,45 @@ pub fn find_words(args: SolverArgs) -> Vec<LetterNext> {
     // Unused letters
     let mut unused = [false; 26];
 
-    // Lambda to add a letter to the contains list
-    let add_contains = |contains: &mut HashMap<u8, Contains>, c| {
-        contains
+    // Lambda to add a letter to the row contains list
+    let add_rowcontains = |rowcontains: &mut HashMap<u8, u8>, c| {
+        rowcontains
             .entry(Dictionary::uchar_to_u8(c))
-            .and_modify(|e| {
-                *e = match *e {
-                    Contains::AtLeast(n) => Contains::AtLeast(n + 1),
-                    Contains::Exactly(_) => panic!("Attempt to update Contains::Exactly"),
-                }
-            })
-            .or_insert(Contains::AtLeast(1));
+            .and_modify(|n| *n += 1)
+            .or_insert(1);
     };
 
+    // Iterate each row
     for row in args.board {
+        let mut rowcontains = HashMap::new();
+
+        // Iterate each letter in the row
         for (elem, col) in row.iter().enumerate() {
             match col {
                 BoardElem::Gray(c) => unused[Dictionary::uchar_to_usize(*c)] = true,
                 BoardElem::Yellow(c) => {
                     incorrect[elem][Dictionary::uchar_to_usize(*c)] = true;
-                    add_contains(&mut contains, *c);
+                    add_rowcontains(&mut rowcontains, *c);
                 }
                 BoardElem::Green(c) => {
                     correct[elem] = Some(Dictionary::uchar_to_u8(*c));
-                    add_contains(&mut contains, *c);
+                    add_rowcontains(&mut rowcontains, *c);
                 }
                 _ => (),
             }
+        }
+
+        // Build contains from rowcontains
+        for (letter, count) in rowcontains.into_iter() {
+            contains
+                .entry(letter)
+                .and_modify(|e| {
+                    *e = match *e {
+                        Contains::AtLeast(n) => Contains::AtLeast(cmp::max(n, count)),
+                        Contains::Exactly(_) => panic!("Attempt to update Contains::Exactly"),
+                    }
+                })
+                .or_insert(Contains::AtLeast(count));
         }
     }
 
