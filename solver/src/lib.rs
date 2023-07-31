@@ -61,11 +61,19 @@ pub fn find_words(args: SolverArgs) -> Vec<LetterNext> {
                 BoardElem::Gray(c) => unused[Dictionary::uchar_to_usize(*c)] = true,
                 BoardElem::Yellow(c) => {
                     incorrect[elem][Dictionary::uchar_to_usize(*c)] = true;
+                    // TODO duplicate
                     contains.push(Dictionary::uchar_to_u8(*c));
                 }
                 BoardElem::Green(c) => correct[elem] = Some(Dictionary::uchar_to_u8(*c)),
                 _ => (),
             }
+        }
+    }
+
+    // Letter can be in contains and unused if guessed multiple times and the word contains fewer
+    for (i, u) in unused.iter_mut().enumerate() {
+        if *u && contains.contains(&(i as u8)) {
+            *u = false;
         }
     }
 
