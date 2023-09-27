@@ -47,7 +47,7 @@ impl App {
     const CELL_YTOTAL: u16 = Self::CELL_HEIGHT + Self::CELL_YSPACE + Self::CELL_SPACING;
 
     /// Usage instructions
-    const INSTRUCTIONS: &str = r#"
+    const INSTRUCTIONS: &'static str = r#"
 Wordle Solver
     
 Fill the board on the left by pressing letter keys.
