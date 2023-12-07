@@ -12,8 +12,8 @@ use crossterm::terminal::{
     LeaveAlternateScreen,
 };
 use dictionary::Dictionary;
-use tui::backend::CrosstermBackend;
-use tui::Terminal;
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
 
 mod app;
 

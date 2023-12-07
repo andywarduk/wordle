@@ -2,13 +2,13 @@ use std::io;
 
 use crossterm::event::{self, Event, KeyCode, MouseEventKind};
 use dictionary::{Dictionary, LetterNext};
+use ratatui::backend::Backend;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span, Text};
+use ratatui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
+use ratatui::{Frame, Terminal};
 use solver::{find_words, BoardElem, SolverArgs, BOARD_COLS, BOARD_ROWS};
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans, Text};
-use tui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
-use tui::{Frame, Terminal};
 
 /// App holds the state of the application
 pub struct App {
@@ -208,7 +208,7 @@ Press Escape to exit"#;
     }
 
     /// Draws the board table
-    fn board_table<B: Backend>(&self, f: &mut Frame<B>) {
+    fn board_table(&self, f: &mut Frame) {
         // Build board table contents
         let content = self
             .board
@@ -277,7 +277,7 @@ Press Escape to exit"#;
     }
 
     /// Draw the words table
-    fn words_table<B: Backend>(&self, f: &mut Frame<B>) {
+    fn words_table(&self, f: &mut Frame) {
         if let Some(rect) = self.words_rect {
             let words = &self.words.as_ref().unwrap();
 
@@ -288,7 +288,7 @@ Press Escape to exit"#;
             // Create spans
             let spans = (0..rows)
                 .map(|row| {
-                    Spans::from(Span::styled(
+                    Line::from(Span::styled(
                         (0..cols).fold(String::new(), |mut line, col| {
                             let elem = (col * rows) + row;
 
