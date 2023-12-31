@@ -230,10 +230,12 @@ Press Escape to exit"#;
             .collect::<Vec<Row>>();
 
         // Create the board table
-        let table = Table::new(content)
-            .widths(&[Constraint::Length(Self::CELL_WIDTH + Self::CELL_XSPACE); BOARD_COLS])
-            .column_spacing(Self::CELL_SPACING)
-            .block(Block::default().borders(Borders::ALL).title("Board"));
+        let table = Table::new(
+            content,
+            &[Constraint::Length(Self::CELL_WIDTH + Self::CELL_XSPACE); BOARD_COLS],
+        )
+        .column_spacing(Self::CELL_SPACING)
+        .block(Block::default().borders(Borders::ALL).title("Board"));
 
         // Render the table
         f.render_widget(table, self.board_rect.unwrap());
