@@ -232,7 +232,7 @@ Press Escape to exit"#;
         // Create the board table
         let table = Table::new(
             content,
-            &[Constraint::Length(Self::CELL_WIDTH + Self::CELL_XSPACE); BOARD_COLS],
+            [Constraint::Length(Self::CELL_WIDTH + Self::CELL_XSPACE); BOARD_COLS],
         )
         .column_spacing(Self::CELL_SPACING)
         .block(Block::default().borders(Borders::ALL).title("Board"));
@@ -370,20 +370,20 @@ Press Escape to exit"#;
     }
 
     /// Toggle a board cell between Gray, Yellow and Green
-    fn toggle(&mut self, row: usize, col: usize) -> bool {
+    fn toggle(&mut self, rownum: usize, colnum: usize) -> bool {
         // Get the character we're toggling
-        if let Some(c) = match self.board[row][col] {
+        if let Some(c) = match self.board[rownum][colnum] {
             BoardElem::Gray(c) | BoardElem::Yellow(c) | BoardElem::Green(c) => Some(c),
             BoardElem::Empty => None,
         } {
             // Work out what to convert the board element to
-            let new = match self.board[row][col] {
+            let new = match self.board[rownum][colnum] {
                 BoardElem::Gray(c) => BoardElem::Yellow(c),
                 BoardElem::Yellow(c) => {
                     if self
                         .board
                         .iter()
-                        .any(|row| matches!(row[col], BoardElem::Green(_)))
+                        .any(|row| matches!(row[colnum], BoardElem::Green(_)))
                     {
                         BoardElem::Gray(c)
                     } else {
@@ -394,13 +394,21 @@ Press Escape to exit"#;
                 BoardElem::Empty => unreachable!(),
             };
 
-            // Set new board element value
-            for row in &mut self.board {
-                match row[col] {
+            // Set new board element value on all rows where applicable
+            for (rn, row) in self.board.iter_mut().enumerate() {
+                match row[colnum] {
                     BoardElem::Gray(oc) | BoardElem::Yellow(oc) | BoardElem::Green(oc)
                         if oc == c =>
                     {
-                        row[col] = new;
+                        // If the letter appears elsewhere on the row, don't set automatically
+                        if rn == rownum
+                            || !row.iter().enumerate().any(|(cn, elem)| {
+                                cn != colnum
+                                    && matches!(*elem, BoardElem::Yellow(oc) | BoardElem::Green(oc) if oc == c)
+                            })
+                        {
+                            row[colnum] = new;
+                        }
                     }
                     _ => (),
                 }
