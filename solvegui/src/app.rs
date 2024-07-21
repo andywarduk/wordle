@@ -2,14 +2,29 @@ use dictionary::Dictionary;
 use iced::keyboard::key::Named;
 use iced::keyboard::{self, Key, Modifiers};
 use iced::widget::{button, container, row, text, Column, Row};
+use iced::window::icon::from_rgba;
+use iced::window::Settings;
 use iced::Length::Fill;
 use iced::{event, window, Color, Element, Event, Rectangle, Subscription, Task};
 use once_cell::sync::Lazy;
 use solveapp::SolveApp;
 
 pub fn rungui(dictionary: Dictionary) -> iced::Result {
+    // Build icon
+    let icon = from_rgba(
+        include_bytes!("../assets/wordle_logo_192x192.rgba").to_vec(),
+        192,
+        192,
+    )
+    .unwrap();
+
+    // Run the app
     iced::application("Wordle Solver", App::update, App::view)
         .subscription(App::subscription)
+        .window(Settings {
+            icon: Some(icon),
+            ..Settings::default()
+        })
         .run_with(|| App::new(dictionary))
 }
 
