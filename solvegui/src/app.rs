@@ -4,7 +4,7 @@ use iced::keyboard::{self, Key, Modifiers};
 use iced::widget::{button, container, row, text, Column, Responsive, Row, Space};
 use iced::window::icon::from_rgba;
 use iced::window::{self, Settings as WinSettings};
-use iced::{Color, Element, Length, Subscription, Task};
+use iced::{Color, Element, Length, Size, Subscription, Task};
 use solveapp::SolveApp;
 
 /// Run the GUI solver
@@ -17,20 +17,41 @@ pub fn rungui(dictionary: Dictionary) -> iced::Result {
     )
     .unwrap();
 
+    // Work out min and initial dimensions
+    let board_dim = |btn_count: u16| {
+        ((BUTTON_DIM * btn_count) + (BOARD_SPACING * (btn_count - 1)) + (PADDING * 2)) as f32
+    };
+
+    let words_w = |word_count: u16| ((WORD_WIDTH * word_count) + (PADDING * 2)) as f32;
+
+    let min_w = board_dim(5);
+    let min_h = board_dim(6);
+
+    let w = min_w + words_w(4);
+    let h = min_h * 1.5;
+
     // Run the app
     iced::application("Wordle Solver", App::update, App::view)
         .subscription(App::subscription)
         .window(WinSettings {
             icon: Some(icon),
+            size: Size::new(w, h),
+            min_size: Some(Size::new(min_w, min_h)),
             ..WinSettings::default()
         })
         .run_with(|| App::new(dictionary))
 }
 
+/// Dimension of board button
+const BUTTON_DIM: u16 = 40;
+/// Board button spacing
+const BOARD_SPACING: u16 = 8;
 /// Height of each word text element
 const WORD_HEIGHT: u16 = 25;
 /// Width of each word text element
 const WORD_WIDTH: u16 = 90;
+/// Element padding
+const PADDING: u16 = 10;
 
 #[derive(Debug, Clone)]
 enum Message {
@@ -149,15 +170,16 @@ impl App {
         .into();
 
         // Draw the board container
-        let board_box = container(Column::with_children([btn_grid, words_txt]).spacing(8))
-            .height(Length::Fill)
-            .padding(10);
+        let board_box =
+            container(Column::with_children([btn_grid, words_txt]).spacing(BOARD_SPACING))
+                .height(Length::Fill)
+                .padding(PADDING);
 
         // Draw the words container
         let words_box = container(words)
             .height(Length::Fill)
             .width(Length::Fill)
-            .padding(10);
+            .padding(PADDING);
 
         // Create row with buttons grid and words
         let res: Element<Message> = row!(board_box, words_box).into();
@@ -204,7 +226,7 @@ impl App {
                     });
 
                 // Create button
-                let mut button = button(text).width(40).height(40);
+                let mut button = button(text).width(BUTTON_DIM).height(BUTTON_DIM);
 
                 // Add click event to toggle
                 if enabled {
