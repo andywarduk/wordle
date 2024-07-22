@@ -163,7 +163,7 @@ Press Escape to exit"#;
             // Draw the board in the left hand section
             self.board_table(f);
 
-            match self.app.word_count() {
+            match self.app.words().count() {
                 Some(_) => {
                     // Draw the word list in the right hand section
                     self.words_table(f);
@@ -191,7 +191,7 @@ Press Escape to exit"#;
         // Build board table contents
         let content = self
             .app
-            .board
+            .board()
             .iter()
             .map(|row| {
                 // Build board table row
@@ -261,7 +261,7 @@ Press Escape to exit"#;
     /// Draw the words table
     fn words_table(&self, f: &mut Frame) {
         if let Some(rect) = self.words_rect {
-            let words = self.app.word_count().unwrap();
+            let words = self.app.words().count().unwrap();
 
             // Calculate the number of rows and columns
             let rows = rect.height as usize - 2;

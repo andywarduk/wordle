@@ -14,7 +14,7 @@ pub const BOARD_COLS: usize = 5;
 pub const BOARD_ROWS: usize = 6;
 
 /// Board element
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash)]
 pub enum BoardElem {
     /// Empty board space
     Empty,

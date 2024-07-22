@@ -2,10 +2,24 @@ use dictionary::{Dictionary, LetterNext};
 use solver::{find_words, SolverArgs};
 pub use solver::{BoardElem, BOARD_COLS, BOARD_ROWS};
 
+/// Found words list
+#[derive(Hash)]
+pub struct Words(Option<Vec<LetterNext>>);
+
+impl Words {
+    /// Get count of words found or None if not calculated
+    pub fn count(&self) -> Option<usize> {
+        match &self.0 {
+            Some(words) => Some(words.len()),
+            None => None,
+        }
+    }
+}
+
 /// App holds the state of the application
 pub struct SolveApp {
     /// Current board
-    pub board: [[BoardElem; BOARD_COLS]; BOARD_ROWS],
+    board: [[BoardElem; BOARD_COLS]; BOARD_ROWS],
     /// Current row
     row: usize,
     /// Current column
@@ -13,7 +27,7 @@ pub struct SolveApp {
     /// Dictionary
     dictionary: Dictionary,
     /// Words
-    words: Option<Vec<LetterNext>>,
+    words: Words,
 }
 
 impl SolveApp {
@@ -24,7 +38,7 @@ impl SolveApp {
             row: 0,
             col: 0,
             dictionary,
-            words: None,
+            words: Words(None),
         }
     }
 
@@ -162,24 +176,26 @@ impl SolveApp {
             };
 
             // Save the word list
-            self.words = Some(find_words(args));
+            self.words = Words(Some(find_words(args)));
         } else {
             // Word list should be empty
-            self.words = None;
+            self.words = Words(None);
         }
     }
 
-    /// Get reference to the words list
-    pub fn word_count(&self) -> Option<usize> {
-        match &self.words {
-            Some(words) => Some(words.len()),
-            _ => None,
-        }
+    /// Get reference to the board
+    pub fn board(&self) -> &[[BoardElem; BOARD_COLS]; BOARD_ROWS] {
+        &self.board
+    }
+
+    /// Get reference to the words
+    pub fn words(&self) -> &Words {
+        &self.words
     }
 
     /// Get word list word
     pub fn get_word(&self, elem: usize) -> Option<String> {
-        if let Some(words) = &self.words {
+        if let Some(words) = &self.words.0 {
             if elem < words.len() {
                 Some(self.dictionary.get_word(words[elem] as usize))
             } else {
