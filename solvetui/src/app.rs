@@ -163,21 +163,24 @@ Press Escape to exit"#;
             // Draw the board in the left hand section
             self.board_table(f);
 
-            if self.app.word_count() > 0 {
-                // Draw the word list in the right hand section
-                self.words_table(f);
-            } else {
-                // Draw the instructions in the right hand section
-                f.render_widget(
-                    Paragraph::new(Text::styled(
-                        Self::INSTRUCTIONS,
-                        Style::default().add_modifier(Modifier::BOLD),
-                    ))
-                    .wrap(Wrap { trim: false })
-                    .block(Block::default().borders(Borders::ALL).title("Instructions")),
-                    self.words_rect.unwrap(),
-                )
-            };
+            match self.app.word_count() {
+                Some(_) => {
+                    // Draw the word list in the right hand section
+                    self.words_table(f);
+                }
+                _ => {
+                    // Draw the instructions in the right hand section
+                    f.render_widget(
+                        Paragraph::new(Text::styled(
+                            Self::INSTRUCTIONS,
+                            Style::default().add_modifier(Modifier::BOLD),
+                        ))
+                        .wrap(Wrap { trim: false })
+                        .block(Block::default().borders(Borders::ALL).title("Instructions")),
+                        self.words_rect.unwrap(),
+                    )
+                }
+            }
         })?;
 
         Ok(())
@@ -258,7 +261,7 @@ Press Escape to exit"#;
     /// Draw the words table
     fn words_table(&self, f: &mut Frame) {
         if let Some(rect) = self.words_rect {
-            let words = self.app.word_count();
+            let words = self.app.word_count().unwrap();
 
             // Calculate the number of rows and columns
             let rows = rect.height as usize - 2;

@@ -170,10 +170,10 @@ impl SolveApp {
     }
 
     /// Get reference to the words list
-    pub fn word_count(&self) -> usize {
+    pub fn word_count(&self) -> Option<usize> {
         match &self.words {
-            Some(words) => words.len(),
-            _ => 0,
+            Some(words) => Some(words.len()),
+            _ => None,
         }
     }
 

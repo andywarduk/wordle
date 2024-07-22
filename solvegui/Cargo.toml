@@ -9,9 +9,7 @@ authors.workspace = true
 
 [dependencies]
 clap = { version = "4.0.29", features = ["derive"] }
-# iced = "0.12.1"
-iced = { git = "https://github.com/iced-rs/iced", features = ["advanced"] }
-once_cell = "1.0"
+iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "lazy"] }
 
 dictionary = { path = "../dictionary" }
 solveapp = { path = "../solveapp" }
