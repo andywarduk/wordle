@@ -9,10 +9,7 @@ pub struct Words(Option<Vec<LetterNext>>);
 impl Words {
     /// Get count of words found or None if not calculated
     pub fn count(&self) -> Option<usize> {
-        match &self.0 {
-            Some(words) => Some(words.len()),
-            None => None,
-        }
+        self.0.as_ref().map(|words| words.len())
     }
 }
 

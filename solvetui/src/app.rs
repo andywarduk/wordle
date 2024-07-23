@@ -4,7 +4,7 @@ use crossterm::event::{self, Event, KeyCode, MouseEventKind};
 use dictionary::Dictionary;
 use ratatui::backend::Backend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
 use ratatui::{Frame, Terminal};
@@ -21,22 +21,19 @@ pub struct App {
 }
 
 impl App {
-    /// Spacing between board table cells
-    const CELL_SPACING: u16 = 1;
-
     /// Board cell draw width
     const CELL_WIDTH: u16 = 5;
     /// Extra X dimension spacing
-    const CELL_XSPACE: u16 = 1;
+    const CELL_XSPACE: u16 = 2;
     /// Total width of a board cell
-    const CELL_XTOTAL: u16 = Self::CELL_WIDTH + Self::CELL_XSPACE + Self::CELL_SPACING;
+    const CELL_XTOTAL: u16 = Self::CELL_WIDTH + Self::CELL_XSPACE;
 
     /// Board cell draw height
     const CELL_HEIGHT: u16 = 3;
     /// Extra Y dimension spacing
-    const CELL_YSPACE: u16 = 0;
+    const CELL_YSPACE: u16 = 1;
     /// Total height of a board cell
-    const CELL_YTOTAL: u16 = Self::CELL_HEIGHT + Self::CELL_YSPACE + Self::CELL_SPACING;
+    const CELL_YTOTAL: u16 = Self::CELL_HEIGHT + Self::CELL_YSPACE;
 
     /// Usage instructions
     const INSTRUCTIONS: &'static str = r#"
@@ -146,9 +143,7 @@ Press Escape to exit"#;
                 .constraints(
                     [
                         Constraint::Length(
-                            (BOARD_COLS as u16 * Self::CELL_XTOTAL)
-                                - (Self::CELL_XSPACE + Self::CELL_SPACING)
-                                + 2,
+                            (BOARD_COLS as u16 * Self::CELL_XTOTAL) - Self::CELL_XSPACE + 2,
                         ),
                         Constraint::Min(BOARD_COLS as u16),
                     ]
@@ -163,23 +158,20 @@ Press Escape to exit"#;
             // Draw the board in the left hand section
             self.board_table(f);
 
-            match self.app.words().count() {
-                Some(_) => {
-                    // Draw the word list in the right hand section
-                    self.words_table(f);
-                }
-                _ => {
-                    // Draw the instructions in the right hand section
-                    f.render_widget(
-                        Paragraph::new(Text::styled(
-                            Self::INSTRUCTIONS,
-                            Style::default().add_modifier(Modifier::BOLD),
-                        ))
-                        .wrap(Wrap { trim: false })
-                        .block(Block::default().borders(Borders::ALL).title("Instructions")),
-                        self.words_rect.unwrap(),
-                    )
-                }
+            if self.app.words().count().is_some() {
+                // Draw the word list in the right hand section
+                self.words_table(f);
+            } else {
+                // Draw the instructions in the right hand section
+                f.render_widget(
+                    Paragraph::new(Text::styled(
+                        Self::INSTRUCTIONS,
+                        Style::default().add_modifier(Modifier::BOLD),
+                    ))
+                    .wrap(Wrap { trim: false })
+                    .block(Block::default().borders(Borders::ALL).title("Instructions")),
+                    self.words_rect.unwrap(),
+                )
             }
         })?;
 
@@ -189,33 +181,22 @@ Press Escape to exit"#;
     /// Draws the board table
     fn board_table(&self, f: &mut Frame) {
         // Build board table contents
-        let content = self
-            .app
-            .board()
-            .iter()
-            .map(|row| {
-                // Build board table row
-                Row::new(
-                    row.iter()
-                        .map(|col| match col {
-                            BoardElem::Empty => Self::board_cell(' ', Color::DarkGray),
-                            BoardElem::Gray(c) => Self::board_cell(*c, Color::DarkGray),
-                            BoardElem::Yellow(c) => Self::board_cell(*c, Color::Yellow),
-                            BoardElem::Green(c) => Self::board_cell(*c, Color::Green),
-                        })
-                        .collect::<Vec<Cell>>(),
-                )
-                .height(4)
-            })
-            .collect::<Vec<Row>>();
+        let content = self.app.board().iter().enumerate().map(|(rn, row)| {
+            // Build board table row
+            Row::new(row.iter().map(|col| match col {
+                BoardElem::Empty => Self::board_cell(' ', Color::DarkGray),
+                BoardElem::Gray(c) => Self::board_cell(*c, Color::DarkGray),
+                BoardElem::Yellow(c) => Self::board_cell(*c, Color::Yellow),
+                BoardElem::Green(c) => Self::board_cell(*c, Color::Green),
+            }))
+            .height(Self::CELL_HEIGHT)
+            .top_margin(if rn == 0 { 0 } else { 1 })
+        });
 
         // Create the board table
-        let table = Table::new(
-            content,
-            [Constraint::Length(Self::CELL_WIDTH + Self::CELL_XSPACE); BOARD_COLS],
-        )
-        .column_spacing(Self::CELL_SPACING)
-        .block(Block::default().borders(Borders::ALL).title("Board"));
+        let table = Table::new(content, [Constraint::Length(Self::CELL_WIDTH); BOARD_COLS])
+            .column_spacing(Self::CELL_XSPACE)
+            .block(Block::default().borders(Borders::ALL).title("Board"));
 
         // Render the table
         f.render_widget(table, self.board_rect.unwrap());
@@ -223,10 +204,12 @@ Press Escape to exit"#;
 
     /// Draws a single board cell
     fn board_cell<'b>(c: char, colour: Color) -> Cell<'b> {
-        Cell::from(Text::styled(
-            format!("     \n  {}  \n     ", c),
-            Style::default().bg(colour).add_modifier(Modifier::BOLD),
-        ))
+        Cell::from(
+            Text::from(format!("\n{}", c))
+                .centered()
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().bg(colour))
     }
 
     /// Tests if a board cell has been hit
