@@ -6,7 +6,7 @@ use ratatui::backend::Backend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style, Stylize};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Block, Borders, Cell, Paragraph, Row, Table, Wrap};
+use ratatui::widgets::{Block, Borders, Cell, Padding, Paragraph, Row, Table, Wrap};
 use ratatui::{Frame, Terminal};
 use solveapp::{BoardElem, SolveApp, BOARD_COLS, BOARD_ROWS};
 
@@ -196,7 +196,12 @@ Press Escape to exit"#;
         // Create the board table
         let table = Table::new(content, [Constraint::Length(Self::CELL_WIDTH); BOARD_COLS])
             .column_spacing(Self::CELL_XSPACE)
-            .block(Block::default().borders(Borders::ALL).title("Board"));
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Board")
+                    .padding(Padding::bottom(1)), // Padding for overflow bug in rataui 0.27
+            );
 
         // Render the table
         f.render_widget(table, self.board_rect.unwrap());
