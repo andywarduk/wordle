@@ -149,7 +149,7 @@ Press Escape to exit"#;
                     ]
                     .as_ref(),
                 )
-                .split(f.size());
+                .split(f.area());
 
             // Save rectangles
             self.board_rect = Some(chunks[0]);
