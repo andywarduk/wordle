@@ -21,10 +21,17 @@
 
     <!-- Main content -->
     <div id="main" class="main_col" style="display: none">
+      <!-- Heading -->
       <h2 class="header">Wordle Solver</h2>
+
+      <!-- Content row -->
       <div class="main_row">
+        <!-- Left hand side -->
         <div class="lhs bg">
+          <!-- The board -->
           <div id="board" class="board"></div>
+
+          <!-- Instructions -->
           <div>
             <p style="margin: 8px">Fill the board by pressing letter keys</p>
             <p style="margin: 8px">
@@ -32,12 +39,19 @@
               1-5
             </p>
           </div>
+
+          <!-- Word count -->
           <div id="count" class="count"></div>
         </div>
+
+        <!-- Right hand side -->
         <div class="rhs bg">
-          <div id="words" class="words"></div>
+          <div class="words_div">
+            <div id="words" class="words"></div>
+          </div>
         </div>
       </div>
+      <!-- End of content row -->
     </div>
 
     <!-- Load the main script -->
