@@ -1,0 +1,175 @@
+/* Use a more-intuitive box-sizing model */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --text-color: black;
+  --text-color-inv: white;
+  --bg-color: white;
+  --bg-color-inv: black;
+  --text-color-dim: #888;
+  height: 100%;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-color: white;
+    --text-color-inv: black;
+    --bg-color: black;
+    --bg-color-inv: white;
+    --text-color-dim: #aaa;
+  }
+}
+
+/* Remove default margin */
+* {
+  margin: 0;
+}
+
+table {
+  /* Collapse table borders by default */
+  border-collapse: collapse;
+}
+
+body {
+  /* Add accessible line-height */
+  line-height: 1.5;
+  /* Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+  /* Default font */
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  /* width: 1vw; */
+  height: 100%;
+  overflow: hidden;
+}
+
+.spinner_row {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color);
+  opacity: 0.9;
+  z-index: 9999;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner_col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 10px solid #ddd;
+  border-top-color: red;
+  animation: spinner 1s linear infinite;
+  margin: 20px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.main_col {
+  flex-direction: column;
+  height: 100%;
+}
+
+.main_row {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  padding: 8px;
+  gap: 8px;
+}
+
+.lhs {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: min-content;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.rhs {
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow: scroll;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 52px);
+  grid-template-rows: repeat(6, 52px);
+  gap: 5px;
+}
+
+.space {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+  color: white;
+}
+
+.space_none {
+  border: 2px solid #3a3a3c;
+  background-color: var(--bg-color);
+}
+
+.space_guess {
+  border: 2px solid #878a8c;
+  background-color: var(--bg-color);
+}
+
+.space_correct {
+  background-color: rgb(83, 141, 78);
+  color: white;
+}
+
+.space_half_correct {
+  background-color: rgb(201, 180, 88);
+  color: white;
+}
+
+.space_incorrect {
+  background-color: rgb(58, 58, 60);
+  color: white;
+}
+
+.words {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  width: 100%;
+  gap: 5px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* TODO .bg {
+  background-color: rgb(230, 230, 256);
+  padding: 16px;
+} */

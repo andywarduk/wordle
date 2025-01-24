@@ -1,0 +1,10 @@
+[package]
+name = "package"
+version = "0.1.0"
+edition = "2024"
+description = "Packages up web bundles from a template"
+
+[dependencies]
+base64 = "0.22.1"
+clap = { version = "4.5.23", features = ["derive"] }
+memmap2 = "0.9.5"

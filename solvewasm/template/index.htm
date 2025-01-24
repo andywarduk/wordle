@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wordle Solver</title>
+    <link rel="icon" type="image/x-icon" href="$link(favicon.ico)" />
+    <link rel="stylesheet" type="text/css" href="$link(styles.css)" />
+  </head>
+
+  <body style="overflow: hidden">
+    <!-- Loading overlay -->
+    <div id="loading" class="spinner_row">
+      <div class="spinner_col">
+        <div class="spinner"></div>
+        <p id="spinnermsg">Loading...</p>
+        <noscript>
+          <h2>Javascript must be enabled to view this page</h2>
+        </noscript>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="main" class="main_col" style="display: none">
+      <div class="main_row">
+        <div class="lhs bg">
+          <div id="board" class="board"></div>
+          <div>
+            <p style="margin: 8px">Fill the board by pressing letter keys.</p>
+            <p style="margin: 8px">
+              Toggle the colour of each tile by clicking with the mouse or
+              pressing 1-5.
+            </p>
+          </div>
+          <div id="count" class="count"></div>
+        </div>
+        <div class="rhs bg">
+          <div id="words" class="words"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load the main script -->
+    <script type="module" src="$link(main.js)"></script>
+  </body>
+</html>
