@@ -87,6 +87,19 @@ body {
   }
 }
 
+.header {
+  background-color: rgb(180, 180, 255);
+  padding: 8px;
+  text-align: center;
+  user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header {
+    background-color: rgb(50, 50, 80);
+  }
+}
+
 .main_col {
   flex-direction: column;
   height: 100%;
@@ -94,6 +107,7 @@ body {
 
 .main_row {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: row;
   overflow: hidden;
   padding: 8px;
@@ -169,7 +183,18 @@ body {
   font-weight: bold;
 }
 
-/* TODO .bg {
+.count {
+  font-weight: bold;
+}
+
+.bg {
   background-color: rgb(230, 230, 256);
+  border-radius: 10px;
   padding: 16px;
-} */
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg {
+    background-color: rgb(50, 50, 65);
+  }
+}
