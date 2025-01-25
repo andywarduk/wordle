@@ -2,7 +2,7 @@
 
 A solver for New York Times [Wordle](https://www.nytimes.com/games/wordle/index.html)
 
-Three versions are available - the console version (TUI), the GUI version and the web version (using WASM).
+Three versions are available - the console version (TUI), the GUI version and [the web version (using WASM)](https://andywarduk.github.io/wordle/).
 
 ## Usage
 
