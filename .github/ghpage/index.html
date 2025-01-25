@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wordle Solver</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+  </head>
+
+  <body style="overflow: hidden">
+    <!-- Loading overlay -->
+    <div id="loading" class="spinner_row">
+      <div class="spinner_col">
+        <div class="spinner"></div>
+        <p id="spinnermsg">Loading...</p>
+        <noscript>
+          <h2>Javascript must be enabled to view this page</h2>
+        </noscript>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="main" class="main_col" style="display: none">
+      <!-- Heading -->
+      <h2 class="header">Wordle Solver</h2>
+
+      <!-- Content row -->
+      <div class="main_row">
+        <!-- Left hand side -->
+        <div class="lhs bg">
+          <!-- The board -->
+          <div id="board" class="board"></div>
+
+          <!-- Instructions -->
+          <div>
+            <p style="margin: 8px">Fill the board by pressing letter keys</p>
+            <p style="margin: 8px">
+              Toggle the colour of each tile by selecting the space or pressing
+              1-5
+            </p>
+          </div>
+
+          <!-- Word count -->
+          <div id="count" class="count"></div>
+        </div>
+
+        <!-- Right hand side -->
+        <div class="rhs bg">
+          <div class="words_div">
+            <div id="words" class="words"></div>
+          </div>
+        </div>
+      </div>
+      <!-- End of content row -->
+    </div>
+
+    <!-- Load the main script -->
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
