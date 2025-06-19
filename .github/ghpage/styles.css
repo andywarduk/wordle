@@ -122,12 +122,12 @@ body {
   flex-direction: column;
   gap: 16px;
   text-align: center;
+  overflow: hidden;
 }
 
 .rhs {
   flex-grow: 1;
   flex-shrink: 1;
-  /* overflow: scroll; */
 }
 
 .board {
@@ -200,5 +200,29 @@ body {
 @media (prefers-color-scheme: dark) {
   .bg {
     background-color: rgb(50, 50, 65);
+  }
+}
+
+/* Shrink the board on small screens */
+@media only screen and (max-width: 600px), (max-height: 480px) {
+  .board {
+    grid-template-columns: repeat(5, 32px);
+    grid-template-rows: repeat(6, 32px);
+    gap: 4px;
+  }
+
+  .space {
+    font-size: 1.7rem;
+  }
+
+  .words {
+    gap: 4px;
+  }
+}
+
+/* Hide instructions on small screens */
+@media only screen and (max-height: 580px) {
+  .instructions {
+    display: none;
   }
 }
