@@ -102,6 +102,6 @@ else
 		# Run python web server
 		launch_url http://127.0.0.1:8000/ 2 &
 
-		python3 -m http.server 8000 --bind 127.0.0.1 -d html
+		python3 -m http.server 8000 --bind 0.0.0.0 -d html
 	fi
 fi
